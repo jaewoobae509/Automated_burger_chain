@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head><title>Log In</title></head>
+<body>
+    <h2>Log In</h2>
+    <form method="post">
+        Username: <input type="text" name="username" required><br>
+        Password: <input type="password" name="password" required><br>
+        <input type="submit" value="Log In">
+    </form>
+    <a href="{{ url_for('index') }}">Back</a>
+</body>
+</html>

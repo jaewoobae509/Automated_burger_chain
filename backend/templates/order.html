@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Order Menu</title>
+</head>
+
+<body>
+    <h1>Menu</h1>
+    <a href="{{ url_for('burgerchain') }}">Back</a>
+    <ul>
+        {% for item in menu %}
+        <li>
+            {{ item[1] }} - ${{ item[2] }}
+            <a href="{{ url_for('add_to_order', recipe_id=item[0]) }}">Add</a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Your Order</h2>
+    {% if order_items %}
+    <ul>
+        {% for item in order_items %}
+        <li>{{ item[0] }} - ${{ item[1] }}</li>
+        {% endfor %}
+    </ul>
+    <p><strong>Total: ${{ total }}</strong></p>
+    <form method="post">
+        <button type="submit">Place Order</button>
+    </form>
+    {% else %}
+    <p>No items in your order.</p>
+    {% endif %}
+
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+</body>
+
+<script>
+    const currentUser = "{{ session['user'] }}";
+
+    async function checkOrderStatus() {
+        const response = await fetch("/orders");
+        const orders = await response.json();
+
+        const userOrder = orders.find(order =>
+            order.customer_name === currentUser &&
+            (order.status === "Completed" || order.status === "Rejected")
+        );
+
+        if (userOrder) {
+            if (userOrder.status === "Completed") {
+                if (confirm(`Your order (#${userOrder.order_id}) is completed! Click OK to acknowledge.`)) {
+                    await fetch(`/orders/${userOrder.order_id}`, {
+                        method: 'DELETE'
+                    });
+                    location.reload();
+                }
+            }
+
+            if (userOrder.status === "Rejected") {
+                alert(`Sorry, your order (#${userOrder.order_id}) was rejected. It will be removed shortly.`);
+                setTimeout(async () => {
+                    await fetch(`/orders/${userOrder.order_id}`, {
+                        method: 'DELETE'
+                    });
+                    location.reload();
+                }, 5000);
+            }
+        }
+    }
+
+    setInterval(checkOrderStatus, 2000);
+</script>
+
+</html>
